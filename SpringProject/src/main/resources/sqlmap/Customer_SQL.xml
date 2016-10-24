@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="customer">
+     
+	
+	<select id="getCustomer" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT	/* Customer.getCustomer */																
+								/*+ ORDERED USE_NL(M C G) */ 
+								M.MEMBER_ID, M.VENDOR_ID, M.LOGIN_ID, M.LOGIN_PWD, M.CUST_ID,  
+								C.CUST_NM, C.CUST_ENM, M.ATTACH_VENDOR_ID, F_DECRYPT(M.JUMIN_NO) JUMIN_NO, M.EMAIL, 
+								SUBSTR(C.MOBILE_TEL,0,4) MOBILE_TEL1, SUBSTR(C.MOBILE_TEL,5,4) MOBILE_TEL2, SUBSTR(C.MOBILE_TEL,9,4) MOBILE_TEL3, 
+								SUBSTR(C.OFFICE_TEL,0,4) OFFICE_TEL1, SUBSTR(C.OFFICE_TEL,5,4) OFFICE_TEL2, SUBSTR(C.OFFICE_TEL,9,4) OFFICE_TEL3, 
+								SUBSTR(C.HOME_TEL,0,4) HOME_TEL1, SUBSTR(C.HOME_TEL,5,4) HOME_TEL2, SUBSTR(C.HOME_TEL,9,4) HOME_TEL3, 
+								SUBSTR(C.ZIPCD,0,3) ZIPCD1, SUBSTR(C.ZIPCD,4,3) ZIPCD2, C.ADDR1 ADDR1, C.ADDR2 ADDR2, C.ADDR_GB, 
+								NVL(G.CUST_GRADE,'09') CUST_GRADE, NVL(C.CASHBAG_MEMBER_YN,'02') CASHBAG_MEMBER_YN 			
+				  FROM CMMBRM M, CSCUST C, CSRFMD G 
+				 WHERE M.EFF_END_DT = '99991231' 
+				   AND M.LOGIN_ID = #{LOGIN_ID}	
+				   AND M.VENDOR_ID = '002201'
+				   AND C.CUST_ID = M.CUST_ID 
+				   AND C.CUST_ID = G.RFM_CUST_ID(+) 
+				   AND G.RFM_VENDOR_ID(+) = '002201'
+				   AND G.EFF_END_MON(+) = '999912'
+		]]>
+	</select>
+
+</mapper>

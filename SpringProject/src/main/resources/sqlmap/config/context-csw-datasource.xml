@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <!-- 
+    <beans:bean id="dataSourceORA" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <beans:property name="driverClassName" value="oracle.jdbc.driver.OracleDriver"/>
+        <beans:property name="url" value="jdbc:oracle:thin:@220.117.243.123:1521:WIZIBS"/>
+        <beans:property name="username" value="wizwid"/>
+        <beans:property name="password" value=""/>
+    </beans:bean>
+     -->
+     
+	 <beans:bean id="dataSourceORA" class="org.springframework.jndi.JndiObjectFactoryBean">
+        <beans:property name="jndiName" value="java:/comp/env/wizwid" />
+	 </beans:bean>
+	 
+	 <beans:bean id="dataSource" class="net.sf.log4jdbc.Log4jdbcProxyDataSource">
+        <beans:constructor-arg ref="dataSourceORA" />
+        <beans:property name="logFormatter">
+            <beans:bean class="net.sf.log4jdbc.tools.Log4JdbcCustomFormatter">
+                <beans:property name="loggingType" value="MULTI_LINE" />
+                <beans:property name="sqlPrefix" value="SQL         :  "/>
+            </beans:bean>
+        </beans:property>
+    </beans:bean>
+        
+    <beans:bean id="sqlSession" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <beans:property name="dataSource" ref="dataSource" />
+        <beans:property name="configLocation" value="classpath:/sqlmap/mybatisConfig.xml" />
+        <beans:property name="mapperLocations" value="classpath:/sqlmap/*_SQL.xml" />
+        <beans:property name="transactionFactory">
+			<!-- <beans:bean class="org.apache.ibatis.transaction.managed.ManagedTransactionFactory" />-->
+			<beans:bean class="org.mybatis.spring.transaction.SpringManagedTransactionFactory">
+			</beans:bean>
+		</beans:property>
+    </beans:bean>
+     
+    <beans:bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+        <beans:constructor-arg index="0" ref="sqlSession"/>
+    </beans:bean>  
+    
+    <!-- Transaction Manager -->
+    <beans:bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <beans:property name="dataSource" ref="dataSource" />
+    </beans:bean>
+   
+    
+   <tx:annotation-driven transaction-manager="transactionManager"></tx:annotation-driven>
+   <tx:annotation-driven proxy-target-class="true"></tx:annotation-driven>
+    
+   <!--
+   <tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+		<tx:method name="get*" read-only="true" />
+		<tx:method name="find*" read-only="true" />
+		<tx:method name="insert*" propagation="REQUIRED" />
+		<tx:method name="delete*" propagation="REQUIRED" />
+		<tx:method name="update*" propagation="REQUIRED" />
+	</tx:attributes>
+</tx:advice>
+
+<aop:config>
+	<aop:pointcut id="servicePublicMethod" expression="execution(public * com.spring.wizwid.front..service.*Service.*(..) )or execution(public * com.spring.wizwid.front..service.impl.*Impl(..) ))" />
+	<aop:advisor advice-ref="txAdvice" pointcut-ref="servicePublicMethod" />
+</aop:config>
+-->
+</beans:beans>

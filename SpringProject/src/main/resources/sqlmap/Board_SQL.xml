@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="board">
+     
+<select id="selectBoardList" parameterType="hashmap" resultType="hashmap">
+	    <include refid="common.pagingPre"/> 
+	    <![CDATA[
+	        SELECT
+	            ROW_NUMBER() OVER (ORDER BY IDX DESC) RNUM,
+	            IDX,
+	            TITLE,
+	            HIT_CNT,
+	            TO_CHAR(CREA_DTM, 'YYYY.MM.DD') AS CREA_DTM
+	        FROM
+	            PSI_BOARD
+	        WHERE
+	            DEL_GB = 'N'
+	    ]]>
+	    <include refid="common.pagingPost"/> 
+	</select>
+	    
+    <insert id="insertBoard" parameterType="hashmap" useGeneratedKeys="true" keyProperty="IDX">
+		<selectKey keyProperty="IDX" resultType="string" order="BEFORE">
+			SELECT SEQ_PSI_BOARD_IDX.NEXTVAL FROM DUAL
+		</selectKey>
+	    <![CDATA[
+	        INSERT INTO DEV006.PSI_BOARD
+	        (
+	            IDX,
+	            TITLE, 
+	            CONTENTS, 
+	            HIT_CNT, 
+	            DEL_GB, 
+	            CREA_DTM, 
+	            CREA_ID
+	        )
+	        VALUES
+	        (
+	            #{IDX}, 
+	            #{TITLE}, 
+	            #{CONTENTS}, 
+	            0, 
+	            'N', 
+	            SYSDATE, 
+	            'Admin'
+	        )
+	    ]]>
+	</insert>
+
+	<update id="updateHitCnt" parameterType="hashmap">
+		<![CDATA[
+			UPDATE DEV006.PSI_BOARD 
+			SET
+				HIT_CNT = NVL(HIT_CNT, 0) + 1
+			WHERE
+				IDX = #{IDX,jdbcType=INTEGER}	
+		]]>
+	</update>
+	
+	
+	<select id="selectBoardDetail" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				IDX,
+				HIT_CNT,
+				CREA_ID,
+				CREA_DTM,
+				TITLE,
+				CONTENTS
+			FROM
+				DEV006.PSI_BOARD
+			WHERE
+				IDX = #{IDX}		
+		]]>
+	</select>
+	
+	<update id="updateBoard" parameterType="hashmap">
+		<![CDATA[
+			UPDATE DEV006.PSI_BOARD 
+			SET
+				TITLE = #{TITLE},
+				CONTENTS = #{CONTENTS}
+			WHERE
+				IDX = #{IDX}	
+		]]>
+	</update>
+	
+	<update id="deleteBoard" parameterType="hashmap">
+		<![CDATA[
+			UPDATE DEV006.PSI_BOARD
+			SET
+				DEL_GB = 'Y'
+			WHERE
+				IDX = #{IDX}
+		]]>
+	</update>
+	
+	<insert id="insertFile" parameterType="hashmap">
+		<![CDATA[
+			INSERT INTO PSI_FILE
+			(
+				IDX,
+				BOARD_IDX,
+				ORIGINAL_FILE_NAME,
+				STORED_FILE_NAME,
+				FILE_SIZE,
+				CREA_ID
+			)
+			VALUES
+			(
+				SEQ_PSI_FILE_IDX.NEXTVAL,
+				#{BOARD_IDX, jdbcType=INTEGER},
+				#{ORIGINAL_FILE_NAME, jdbcType=VARCHAR},
+				#{STORED_FILE_NAME, jdbcType=VARCHAR},
+				#{FILE_SIZE, jdbcType=INTEGER},
+				'Admin'
+			)
+		]]>
+	</insert>
+	
+	<select id="selectFileList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+			    IDX,
+			    ORIGINAL_FILE_NAME,
+			    ROUND(FILE_SIZE/1024,1) AS FILE_SIZE
+			FROM
+			    PSI_FILE
+			WHERE
+			    BOARD_IDX = #{IDX}
+			    AND DEL_GB = 'N'
+		]]>
+	</select>
+	
+	<update id="deleteFileList" parameterType="hashmap">
+		<![CDATA[
+			UPDATE PSI_FILE SET 
+				DEL_GB = 'Y' 
+			WHERE 
+				BOARD_IDX = #{IDX}	
+		]]>
+	</update>
+	
+	<update id="updateFile" parameterType="hashmap">
+		<![CDATA[
+			UPDATE PSI_FILE SET
+				DEL_GB = 'N'
+			WHERE
+				IDX = #{FILE_IDX}	
+		]]>
+	</update>
+	
+</mapper>
